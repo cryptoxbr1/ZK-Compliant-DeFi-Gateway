@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZK-Compliant DeFi Gateway</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>ZK-Compliant DeFi Gateway</h1>
+
+  <section>
+    <h2>Issue Identity Credential</h2>
+    <label>Owner Address: <input id="id_owner" type="text"></label><br>
+    <label>Issuer Address: <input id="id_issuer" type="text"></label><br>
+    <label>Date of Birth (YYYY-MM-DD): <input id="id_dob" type="date"></label><br>
+    <label>Nationality: <input id="id_nationality" type="text"></label><br>
+    <label>KYC Status: <input id="id_kyc" type="checkbox"></label><br>
+    <label>Expiration Date: <input id="id_expiration" type="date"></label><br>
+    <button id="issue_identity_btn">Issue Identity Credential</button>
+  </section>
+
+  <section>
+    <h2>Issue Credit Credential</h2>
+    <label>Owner Address: <input id="cred_owner" type="text"></label><br>
+    <label>Issuer Address: <input id="cred_issuer" type="text"></label><br>
+    <label>Score: <input id="cred_score" type="number"></label><br>
+    <label>Threshold (min score): <input id="cred_threshold" type="number" value="650"></label><br>
+    <label>Expiration Date: <input id="cred_expiration" type="date"></label><br>
+    <button id="issue_credit_btn">Issue Credit Credential</button>
+  </section>
+
+  <section>
+    <h2>Generate Proof & Deposit</h2>
+    <label>User Address: <input id="proof_owner" type="text"></label><br>
+    <label>Deposit Amount: <input id="deposit_amount" type="number"></label><br>
+    <button id="generate_proof_btn">Generate Proof</button>
+    <button id="deposit_btn">Deposit</button>
+  </section>
+
+  <section>
+    <h2>Logs</h2>
+    <pre id="log"></pre>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
