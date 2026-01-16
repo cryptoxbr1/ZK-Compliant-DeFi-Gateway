@@ -1,47 +1,68 @@
 program defi_gateway;
 
-// This program acts as a gateway for DeFi interactions on Aleo.
-// It verifies zero‑knowledge proofs of identity and credit credentials before allowing
-// users to call downstream DeFi functions. This skeleton uses placeholder logic.
+// Import the identity and credit credential programs so we can call their
+// verification functions. These programs must reside in the same package
+// hierarchy (programs/identity_credential and programs/credit_credential).
+import identity_credential;
+import credit_credential;
 
-// In a full implementation, you would import the identity and credit programs and
-// call their on-chain verification functions. For example:
-// use identity_credential::verify_onchain;
-// use credit_credential::verify_onchain;
+// Maintain two mappings of used nullifiers for identity and credit proofs.
+// These mappings prevent a user from reusing a proof to bypass access
+// controls multiple times.
+mapping id_nullifiers: field -> bool;
+mapping credit_nullifiers: field -> bool;
 
-// Dummy access verification: simply ensures proofs are non-zero. A real contract
-// would verify the proofs and check that the nullifiers have not been used.
+// Verifies that a user holds a valid identity and credit credential. The
+// caller supplies the proof hashes and nullifiers along with the underlying
+// credential records. This function checks that neither nullifier has been
+// used before, that the proofs are valid according to the imported
+// verification functions, and then records the nullifiers as used.
 transition verify_access(
     id_proof: field,
-    cred_proof: field,
     id_nullifier: field,
-    cred_nullifier: field
+    credit_proof: field,
+    credit_nullifier: field,
+    identity: identity_credential::IdentityCredential,
+    credit: credit_credential::CreditCredential
 ) -> bool {
-    // Reject if either proof is zero (simulating an invalid proof)
-    if id_proof == 0 || cred_proof == 0 {
+    // Reject if the nullifiers have already been consumed
+    if id_nullifiers.contains(id_nullifier) {
         return false;
-    };
-    // TODO: store and check nullifiers to prevent proof reuse.
-    return true;
+    }
+    if credit_nullifiers.contains(credit_nullifier) {
+        return false;
+    }
+    // Call into the imported programs to verify each proof
+    if !identity_credential::verify_onchain(id_proof, id_nullifier, identity) {
+        return false;
+    }
+    if !credit_credential::verify_onchain(credit_proof, credit_nullifier, credit) {
+        return false;
+    }
+    // Record the nullifiers to prevent re‑use
+    id_nullifiers[id_nullifier] = true;
+    credit_nullifiers[credit_nullifier] = true;
+    true
 }
 
-// Deposit function gated by proof verification. In a real DeFi gateway, this
-// would forward the call to a private liquidity pool or lending protocol after
-// verifying the user’s eligibility.
+// A simple deposit transition that requires the caller to present valid proofs.
+// The amount parameter is included for completeness; in a real implementation
+// this function would update encrypted balances on‑chain. Here it simply
+// returns true if access verification succeeds.
 transition deposit(
-    user: address,
-    amount: u64,
     id_proof: field,
-    cred_proof: field,
     id_nullifier: field,
-    cred_nullifier: field
+    credit_proof: field,
+    credit_nullifier: field,
+    identity: identity_credential::IdentityCredential,
+    credit: credit_credential::CreditCredential,
+    amount: u64
 ) -> bool {
-    // Check access first
-    let authorized: bool = verify_access(id_proof, cred_proof, id_nullifier, cred_nullifier);
-    if !authorized {
+    let permitted: bool = verify_access(id_proof, id_nullifier, credit_proof, credit_nullifier, identity, credit);
+    if !permitted {
         return false;
-    };
-    // TODO: implement deposit logic (e.g., update balances or call other contracts).
-    // For now, always return true to indicate success.
-    return true;
+    }
+    // Insert deposit logic here (e.g., update user balance). For now just
+    // return true to indicate the deposit would succeed.
+    true
 }
